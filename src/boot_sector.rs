@@ -467,6 +467,8 @@ impl BootSector {
     }
 
     pub(crate) fn validate<E: IoError>(&self) -> Result<(), Error<E>> {
+        debug!("validate debug");
+        warn!("validate warn");
         if self.boot_sig != [0x55, 0xAA] {
             error!(
                 "Invalid boot sector signature: expected [0x55, 0xAA] but got {:?}",
