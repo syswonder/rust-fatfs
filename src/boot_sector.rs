@@ -477,7 +477,7 @@ impl BootSector {
             return Err(Error::CorruptedFileSystem);
         }
         if self.bootjmp[0] != 0xEB && self.bootjmp[0] != 0xE9 {
-            warn!("Unknown opcode {:x} in bootjmp boot sector field", self.bootjmp[0]);
+            warn!("lhw Unknown opcode {:x} in bootjmp boot sector field", self.bootjmp[0]);
         }
         self.bpb.validate()?;
         Ok(())
