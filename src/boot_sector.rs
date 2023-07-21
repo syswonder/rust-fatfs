@@ -124,6 +124,21 @@ impl BiosParameterBlock {
         Ok(())
     }
 
+    pub fn lhw_debug(&self){
+        debug!("    bytes_per_sector: {}", self.bytes_per_sector);
+        debug!("    sectors_per_cluster: {}", self.sectors_per_cluster);
+        debug!("    reserved_sectors: {}", self.reserved_sectors);
+        debug!("    fats: {}", self.fats);
+        debug!("    root_entries: {}", self.root_entries);
+        debug!("    total_sectors_16: {}", self.total_sectors_16);
+        debug!("    media: {}", self.media);
+        debug!("    sectors_per_fat_16: {}", self.sectors_per_fat_16);
+        debug!("    sectors_per_track: {}", self.sectors_per_track);
+        debug!("    heads: {}", self.heads);
+        debug!("    hidden_sectors: {}", self.hidden_sectors);
+        debug!("    total_sectors_32: {}", self.total_sectors_32);
+    }
+
     fn validate_bytes_per_sector<E: IoError>(&self) -> Result<(), Error<E>> {
         if self.bytes_per_sector.count_ones() != 1 {
             error!(
@@ -421,12 +436,14 @@ pub(crate) struct BootSector {
 
 impl BootSector {
     pub(crate) fn deserialize<R: Read>(rdr: &mut R) -> Result<Self, R::Error> {
+        debug!("bootsector deserialize");
         let mut boot = Self::default();
         rdr.read_exact(&mut boot.bootjmp)?;
         rdr.read_exact(&mut boot.oem_name)?;
         boot.bpb = BiosParameterBlock::deserialize(rdr)?;
-
+        boot.bpb.lhw_debug();
         if boot.bpb.is_fat32() {
+            debug!("is fat32");
             rdr.read_exact(&mut boot.boot_code[0..420])?;
         } else {
             rdr.read_exact(&mut boot.boot_code[0..448])?;
