@@ -367,7 +367,8 @@ impl<IO: Read + Write + Seek, TP, OCC> FileSystem<IO, TP, OCC> {
         let mut disk = storage.into_storage();
         trace!("FileSystem::new");
         debug_assert!(disk.seek(SeekFrom::Current(0))? == 0);
-
+        debug!("debug new");
+        warn!("warn new");
         // read boot sector
         let bpb = {
             let boot = BootSector::deserialize(&mut disk)?;
