@@ -47,6 +47,7 @@ pub(crate) struct BiosParameterBlock {
 
 impl BiosParameterBlock {
     fn deserialize<R: Read>(rdr: &mut R) -> Result<Self, R::Error> {
+        debug!("deserialize begin");
         let mut bpb = Self {
             bytes_per_sector: rdr.read_u16_le()?,
             sectors_per_cluster: rdr.read_u8()?,
@@ -62,7 +63,7 @@ impl BiosParameterBlock {
             total_sectors_32: rdr.read_u32_le()?,
             ..Self::default()
         };
-
+        debug!("deserialize end bpb");
         if bpb.is_fat32() {
             bpb.sectors_per_fat_32 = rdr.read_u32_le()?;
             bpb.extended_flags = rdr.read_u16_le()?;
