@@ -130,6 +130,7 @@ impl<'a, IO: ReadWriteSeek, TP: TimeProvider, OCC: OemCpConverter> Dir<'a, IO, T
         is_dir: Option<bool>,
         mut short_name_gen: Option<&mut ShortNameGenerator>,
     ) -> Result<DirEntry<'a, IO, TP, OCC>, Error<IO::Error>> {
+        info!("lhw debug in rust-fatfs dir find_entry");
         for r in self.iter() {
             let e = r?;
             // compare name ignoring case
@@ -225,12 +226,14 @@ impl<'a, IO: ReadWriteSeek, TP: TimeProvider, OCC: OemCpConverter> Dir<'a, IO, T
     /// * `Error::Io` will be returned if the underlying storage object returned an I/O error.
     pub fn open_file(&self, path: &str) -> Result<File<'a, IO, TP, OCC>, Error<IO::Error>> {
         trace!("Dir::open_file {}", path);
+        info!("lhw debug in rust-fatfs dir open_file");
         // traverse path
         let (name, rest_opt) = split_path(path);
         if let Some(rest) = rest_opt {
             let e = self.find_entry(name, Some(true), None)?;
             return e.to_dir().open_file(rest);
         }
+        info!("lhw debug in rust-fatfs dir find_entry before convert entry to a file");
         // convert entry to a file
         let e = self.find_entry(name, Some(false), None)?;
         Ok(e.to_file())
