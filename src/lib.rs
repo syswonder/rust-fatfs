@@ -54,13 +54,14 @@
     clippy::uninlined_format_args, // not supported before Rust 1.58.0
 )]
 
+#[macro_use]
 extern crate log;
 
 #[cfg(all(not(feature = "std"), feature = "alloc"))]
 extern crate alloc;
 
-#[macro_use]
-mod log_macros;
+/*#[macro_use]
+mod log_macros;*/
 
 mod boot_sector;
 mod dir;
