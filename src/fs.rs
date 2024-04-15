@@ -9,6 +9,8 @@ use core::fmt::Debug;
 use core::marker::PhantomData;
 use core::u32;
 
+use spin::RwLock;
+
 use crate::boot_sector::{format_boot_sector, BiosParameterBlock, BootSector};
 use crate::dir::{Dir, DirRawStream};
 use crate::dir_entry::{DirFileEntryData, FileAttributes, SFN_PADDING, SFN_SIZE};
@@ -313,7 +315,7 @@ impl FileSystemStats {
 ///
 /// `FileSystem` struct is representing a state of a mounted FAT volume.
 pub struct FileSystem<IO: ReadWriteSeek, TP, OCC> {
-    pub(crate) disk: RefCell<IO>,
+    pub(crate) disk: RwLock<IO>,
     pub(crate) options: FsOptions<TP, OCC>,
     fat_type: FatType,
     bpb: BiosParameterBlock,
@@ -400,7 +402,7 @@ impl<IO: Read + Write + Seek, TP, OCC> FileSystem<IO, TP, OCC> {
         let status_flags = bpb.status_flags();
         trace!("FileSystem::new end");
         Ok(Self {
-            disk: RefCell::new(disk),
+            disk: RwLock::new(disk),
             options,
             fat_type,
             bpb,
@@ -497,7 +499,7 @@ impl<IO: Read + Write + Seek, TP, OCC> FileSystem<IO, TP, OCC> {
             alloc_cluster(&mut fat, self.fat_type, prev_cluster, hint, self.total_clusters)?
         };
         if zero {
-            let mut disk = self.disk.borrow_mut();
+            let mut disk = self.disk.write();
             disk.seek(SeekFrom::Start(self.offset_from_cluster(cluster)))?;
             write_zeros(&mut *disk, u64::from(self.cluster_size()))?;
         }
@@ -571,7 +573,7 @@ impl<IO: Read + Write + Seek, TP, OCC> FileSystem<IO, TP, OCC> {
     fn flush_fs_info(&self) -> Result<(), Error<IO::Error>> {
         let mut fs_info = self.fs_info.borrow_mut();
         if self.fat_type == FatType::Fat32 && fs_info.dirty {
-            let mut disk = self.disk.borrow_mut();
+            let mut disk = self.disk.write();
             let fs_info_sector_offset = self.offset_from_sector(u32::from(self.bpb.fs_info_sector));
             disk.seek(SeekFrom::Start(fs_info_sector_offset))?;
             fs_info.serialize(&mut *disk)?;
@@ -598,7 +600,7 @@ impl<IO: Read + Write + Seek, TP, OCC> FileSystem<IO, TP, OCC> {
         } else {
             0x025
         };
-        let mut disk = self.disk.borrow_mut();
+        let mut disk = self.disk.write();
         disk.seek(io::SeekFrom::Start(offset))?;
         disk.write_u8(encoded)?;
         self.current_status_flags.set(flags);
@@ -701,13 +703,13 @@ impl<IO: ReadWriteSeek, TP, OCC> IoBase for FsIoAdapter<'_, IO, TP, OCC> {
 
 impl<IO: ReadWriteSeek, TP, OCC> Read for FsIoAdapter<'_, IO, TP, OCC> {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
-        self.fs.disk.borrow_mut().read(buf)
+        self.fs.disk.write().read(buf)
     }
 }
 
 impl<IO: ReadWriteSeek, TP, OCC> Write for FsIoAdapter<'_, IO, TP, OCC> {
     fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
-        let size = self.fs.disk.borrow_mut().write(buf)?;
+        let size = self.fs.disk.write().write(buf)?;
         if size > 0 {
             self.fs.set_dirty_flag(true)?;
         }
@@ -715,13 +717,13 @@ impl<IO: ReadWriteSeek, TP, OCC> Write for FsIoAdapter<'_, IO, TP, OCC> {
     }
 
     fn flush(&mut self) -> Result<(), Self::Error> {
-        self.fs.disk.borrow_mut().flush()
+        self.fs.disk.write().flush()
     }
 }
 
 impl<IO: ReadWriteSeek, TP, OCC> Seek for FsIoAdapter<'_, IO, TP, OCC> {
     fn seek(&mut self, pos: SeekFrom) -> Result<u64, Self::Error> {
-        self.fs.disk.borrow_mut().seek(pos)
+        self.fs.disk.write().seek(pos)
     }
 }
 
