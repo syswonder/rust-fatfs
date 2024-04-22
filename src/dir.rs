@@ -153,6 +153,32 @@ impl<'a, IO: ReadWriteSeek, TP: TimeProvider, OCC: OemCpConverter> Dir<'a, IO, T
         Err(Error::NotFound) //("No such file or directory"))
     }
 
+    /// judge if a path is a file or dir
+    ///
+    /// `path` is a '/' separated directory path relative to self directory.
+    ///
+    /// # Errors
+    ///
+    /// Errors that can be returned:
+    ///
+    /// * `Error::NotFound` will be returned if `path` does not point to any existing directory entry.
+    pub fn check_path_type(&self, path: &str) -> Result<Option<bool>, Error<IO::Error>> {
+        let (name, rest_opt) = split_path(path);
+        if let Some(rest) = rest_opt {
+            let e = self.find_entry(name, Some(true), None)?;
+            return e.to_dir().check_path_type(rest);
+        }
+        // judge path if is a dir
+        for r in self.iter() {
+            let e = r?;
+            // compare name ignoring case
+            if e.eq_name(name) {
+                return Ok(Some(e.is_dir()))
+            }
+        }
+        Err(Error::NotFound)
+    }
+
     #[allow(clippy::type_complexity)]
     pub(crate) fn find_volume_entry(&self) -> Result<Option<DirEntry<'a, IO, TP, OCC>>, Error<IO::Error>> {
         for r in DirIter::new(self.stream.clone(), self.fs, false) {
