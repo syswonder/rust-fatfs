@@ -6,6 +6,7 @@ use core::num;
 use core::str;
 #[cfg(feature = "lfn")]
 use core::{iter, slice};
+use log::{error, warn, info, debug, trace};
 
 use crate::dir_entry::{
     DirEntry, DirEntryData, DirFileEntryData, DirLfnEntryData, FileAttributes, ShortName, DIR_ENTRY_SIZE,

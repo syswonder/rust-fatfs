@@ -1,6 +1,7 @@
 use core::borrow::BorrowMut;
 use core::cmp;
 use core::marker::PhantomData;
+use log::{error, warn, info, debug, trace};
 
 use crate::error::{Error, IoError};
 use crate::fs::{FatType, FsStatusFlags};

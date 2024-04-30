@@ -1,4 +1,5 @@
 use crate::error::IoError;
+use log::{error, warn, info, debug, trace};
 
 /// Provides IO error as an associated type.
 ///

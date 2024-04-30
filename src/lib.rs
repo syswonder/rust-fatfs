@@ -60,9 +60,6 @@ extern crate spin;
 #[cfg(all(not(feature = "std"), feature = "alloc"))]
 extern crate alloc;
 
-#[macro_use]
-mod log_macros;
-
 mod boot_sector;
 mod dir;
 mod dir_entry;

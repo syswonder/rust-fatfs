@@ -8,6 +8,7 @@ use core::convert::TryFrom;
 use core::fmt::Debug;
 use core::marker::PhantomData;
 use core::u32;
+use log::{error, warn, info, debug, trace};
 
 use spin::RwLock;
 

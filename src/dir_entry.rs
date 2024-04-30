@@ -7,6 +7,7 @@ use core::fmt;
 #[cfg(not(feature = "unicode"))]
 use core::iter;
 use core::str;
+use log::{error, warn, info, debug, trace};
 
 #[cfg(feature = "lfn")]
 use crate::dir::LfnBuffer;
